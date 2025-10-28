@@ -1,30 +1,41 @@
-import React from "react";
-import { cn } from "../../utils/cn";
+import React, { useEffect } from "react";
+import type { ReactNode } from "react";
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title?: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 flex items-center justify-center z-[100]">
+      {/* Backdrop */}
       <div
-        className={cn(
-          "bg-white rounded-lg shadow-modal w-[90%] max-w-md p-5 animate-fade-in",
-        )}
+        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Modal Content */}
+      <div
+        className="relative bg-white rounded-2xl shadow-modal p-6 w-full max-w-md animate-slide-up z-[101]"
         onClick={(e) => e.stopPropagation()}
       >
-        {title && <h2 className="text-lg font-semibold mb-3">{title}</h2>}
         {children}
       </div>
     </div>
   );
 };
+
+export default Modal;
