@@ -1,6 +1,23 @@
 import { create } from "zustand";
 import type { CalendarEvent } from "../components/Calendar/CalendarView.types";
 
+const STORAGE_KEY = "calendar_events";
+
+// ✅ Load from localStorage once on startup
+const loadEvents = (): CalendarEvent[] => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
+};
+
+// ✅ Save to localStorage whenever events change
+const saveEvents = (events: CalendarEvent[]) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+};
+
 interface EventStore {
   events: CalendarEvent[];
   addEvent: (event: CalendarEvent) => void;
@@ -10,7 +27,7 @@ interface EventStore {
 }
 
 export const useEventStore = create<EventStore>((set, get) => ({
-  events: [],
+  events: loadEvents(),
 
  addEvent: (event) => {
   set((state) => {
@@ -19,6 +36,7 @@ console.log("📍 All Events:", get().events);
 
 
     const updated = [...state.events, event];
+    saveEvents(updated);
 
     console.log("Updated Events:", updated);
     return { events: updated };

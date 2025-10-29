@@ -1,37 +1,38 @@
 import React from "react";
-import { getMonthGrid } from "../../utils/date.utils";
 import CalendarCell from "./CalendarCell";
+import { getMonthGrid } from "../../utils/date.utils";
 
 interface MonthViewProps {
   currentDate: Date;
+  onDayClick: (date: Date) => void;
+  onEventClick: (event: any) => void;
 }
 
-const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-const MonthView: React.FC<MonthViewProps> = ({ currentDate }) => {
-  const days = getMonthGrid(currentDate);
+const MonthView: React.FC<MonthViewProps> = ({
+  currentDate,
+  onDayClick,
+  onEventClick
+}) => {
+  const monthDays = getMonthGrid(currentDate);
 
   return (
-    <div className="select-none">
-      {/* Weekday labels */}
-      <div className="grid grid-cols-7 mb-2">
-        {weekdays.map((day) => (
-          <div
-            key={day}
-            className="text-xs font-medium text-neutral-500 text-center py-2"
-          >
-            {day}
-          </div>
+    <div>
+      {/* Days header */}
+      <div className="grid grid-cols-7 mb-2 text-center text-sm font-medium text-neutral-600">
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+          <div key={day}>{day}</div>
         ))}
       </div>
 
-      {/* Date cells */}
-      <div className="grid grid-cols-7 gap-1">
-        {days.map((day, idx) => (
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-7 gap-2">
+        {monthDays.map((day, index) => (
           <CalendarCell
-            key={idx}
-            date={day.date}
+            key={index}
+            date={day.date}               // ✅ Correct Date object
             currentMonth={currentDate}
+            onClick={() => onDayClick(day.date)}        // ✅ Opens modal
+            onEventClick={onEventClick}           // ✅ Edit modal works
           />
         ))}
       </div>

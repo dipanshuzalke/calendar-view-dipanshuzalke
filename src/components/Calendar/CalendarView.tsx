@@ -1,30 +1,40 @@
 import React, { useState } from "react";
-import { format } from "date-fns";
-import { getMonthGrid } from "../../utils/date.utils";
-import CalendarCell from "./CalendarCell";
+import { format, addDays } from "date-fns";
+import MonthView from "./MonthView";
+import WeekView from "./WeekView";
 import EventModal from "./EventModal";
 import type { CalendarEvent } from "./CalendarView.types";
 
-export const CalendarView = () => {
-  // const [view, setView] = useState<"month" | "week">("month");
+const CalendarView = () => {
+  const [view, setView] = useState<"month" | "week">("month");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-    const [eventToEdit, setEventToEdit] = useState<CalendarEvent | null>(null);
+  const [eventToEdit, setEventToEdit] = useState<CalendarEvent | null>(null);
 
-  const monthDays = getMonthGrid(currentDate);
-
+  // ✅ Navigation based on active view mode
   const handlePrev = () => {
-    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+    setCurrentDate((prev) =>
+      view === "month"
+        ? new Date(prev.getFullYear(), prev.getMonth() - 1, 1)
+        : addDays(prev, -7)
+    );
   };
 
   const handleNext = () => {
-    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+    setCurrentDate((prev) =>
+      view === "month"
+        ? new Date(prev.getFullYear(), prev.getMonth() + 1, 1)
+        : addDays(prev, 7)
+    );
   };
 
-    const openCreateModal = (date?: Date) => {
+  const handleToday = () => setCurrentDate(new Date());
+
+  // ✅ Modal handlers
+  const openCreateModal = (date?: Date) => {
     setEventToEdit(null);
-    setSelectedDate(date ?? null);
+    setSelectedDate(date ?? new Date());
     setIsModalOpen(true);
   };
 
@@ -34,12 +44,19 @@ export const CalendarView = () => {
     setIsModalOpen(true);
   };
 
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEventToEdit(null);
+    setSelectedDate(null);
+  };
 
   return (
     <div className="p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-4">
+
+        {/* Navigation */}
+        <div className="flex items-center gap-3">
           <button
             onClick={handlePrev}
             className="px-3 py-1.5 border rounded-lg hover:bg-neutral-100"
@@ -47,7 +64,7 @@ export const CalendarView = () => {
             &lt;
           </button>
 
-          <h2 className="text-xl font-semibold">
+          <h2 className="text-xl font-semibold min-w-[160px] text-center">
             {format(currentDate, "MMMM yyyy")}
           </h2>
 
@@ -57,9 +74,37 @@ export const CalendarView = () => {
           >
             &gt;
           </button>
+
+          <button
+            onClick={handleToday}
+            className="px-3 py-1.5 border rounded-lg hover:bg-neutral-100"
+          >
+            Today
+          </button>
         </div>
 
-        {/* Add Event Button */}
+        {/* View Toggle */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setView("month")}
+            className={`px-3 py-1.5 border rounded-lg text-sm transition ${
+              view === "month" ? "bg-neutral-200" : "hover:bg-neutral-100"
+            }`}
+          >
+            Month
+          </button>
+
+          <button
+            onClick={() => setView("week")}
+            className={`px-3 py-1.5 border rounded-lg text-sm transition ${
+              view === "week" ? "bg-neutral-200" : "hover:bg-neutral-100"
+            }`}
+          >
+            Week
+          </button>
+        </div>
+
+        {/* Add Event */}
         <button
           onClick={() => openCreateModal()}
           className="px-4 py-2 rounded-lg bg-primary-500 text-white hover:bg-primary-600 transition"
@@ -68,34 +113,23 @@ export const CalendarView = () => {
         </button>
       </div>
 
-      {/* Weekdays Header */}
-      <div className="grid grid-cols-7 mb-2 text-center text-sm font-medium text-neutral-600">
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-          <div key={day}>{day}</div>
-        ))}
-      </div>
+      {/* Render Correct View */}
+      {view === "month" ? (
+        <MonthView
+          currentDate={currentDate}
+          {...({ onDayClick: openCreateModal, onEventClick: openEditModal } as any)}
+        />
+      ) : (
+        <WeekView
+          currentDate={currentDate}
+          {...({ onDayClick: openCreateModal, onEventClick: openEditModal } as any)}
+        />
+      )}
 
-      {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-2">
-        {monthDays.map((dayObj, index) => (
-          <CalendarCell
-            key={index}
-            date={dayObj.date}
-            currentMonth={currentDate}
-            onClick={() => openCreateModal(dayObj.date)} // ✅ Correct date
-            onEventClick={(evt) => openEditModal(evt)}
-          />
-        ))}
-      </div>
-
-      {/* Event Modal */}
+      {/* Modal */}
       <EventModal
         isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setEventToEdit(null);
-          setSelectedDate(null);
-        }}
+        onClose={closeModal}
         defaultDate={selectedDate}
         eventToEdit={eventToEdit}
       />
