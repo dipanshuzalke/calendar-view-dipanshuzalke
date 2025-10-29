@@ -1,25 +1,24 @@
+// src/components/Calendar/CalendarCell.tsx
 import React from "react";
 import { isSameDay, isSameMonth } from "../../utils/date.utils";
 import { useEventStore } from "../../store/eventStore";
 import { getCategoryStyles } from "../../utils/event.utils";
+import type { CalendarEvent } from "./CalendarView.types";
 
 interface CalendarCellProps {
   date: Date;
   currentMonth: Date;
   onClick?: () => void;
+  onEventClick?: (evt: CalendarEvent) => void;
 }
 
-const CalendarCell: React.FC<CalendarCellProps> = ({
-  date,
-  currentMonth,
-  onClick,
-}) => {
+const CalendarCell: React.FC<CalendarCellProps> = ({ date, currentMonth, onClick, onEventClick }) => {
   const today = new Date();
   const isToday = isSameDay(date, today);
   const inCurrentMonth = isSameMonth(date, currentMonth);
 
-  const getEventsByDate = useEventStore((state) => state.getEventsByDate);
-  const dayEvents = getEventsByDate(date);
+  const getEventsByDate = useEventStore((s) => s.getEventsByDate);
+  const dayEvents = getEventsByDate(date) || [];
 
   const displayEvents = dayEvents.slice(0, 2);
   const extraCount = dayEvents.length - displayEvents.length;
@@ -37,12 +36,17 @@ const CalendarCell: React.FC<CalendarCellProps> = ({
 
       <div className="flex flex-col gap-1 overflow-hidden">
         {displayEvents.map((evt) => (
-          <div
+          <button
             key={evt.id}
-            className={`text-xs px-2 py-0.5 rounded truncate ${getCategoryStyles(evt.category)}`}
+            onClick={(e) => {
+              e.stopPropagation(); // prevent opening create modal
+              onEventClick?.(evt);
+            }}
+            className={`text-xs px-2 py-0.5 rounded truncate text-left ${getCategoryStyles(evt.category)}`}
+            title={evt.title}
           >
             {evt.title}
-          </div>
+          </button>
         ))}
 
         {extraCount > 0 && (

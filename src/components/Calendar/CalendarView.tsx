@@ -3,12 +3,14 @@ import { format } from "date-fns";
 import { getMonthGrid } from "../../utils/date.utils";
 import CalendarCell from "./CalendarCell";
 import EventModal from "./EventModal";
+import type { CalendarEvent } from "./CalendarView.types";
 
 export const CalendarView = () => {
-  const [view, setView] = useState<"month" | "week">("month");
+  // const [view, setView] = useState<"month" | "week">("month");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+    const [eventToEdit, setEventToEdit] = useState<CalendarEvent | null>(null);
 
   const monthDays = getMonthGrid(currentDate);
 
@@ -20,10 +22,18 @@ export const CalendarView = () => {
     setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
   };
 
-  const handleOpenModal = (date?: Date) => {
-    setSelectedDate(date || null);
+    const openCreateModal = (date?: Date) => {
+    setEventToEdit(null);
+    setSelectedDate(date ?? null);
     setIsModalOpen(true);
   };
+
+  const openEditModal = (evt: CalendarEvent) => {
+    setEventToEdit(evt);
+    setSelectedDate(null);
+    setIsModalOpen(true);
+  };
+
 
   return (
     <div className="p-4">
@@ -51,7 +61,7 @@ export const CalendarView = () => {
 
         {/* Add Event Button */}
         <button
-          onClick={() => handleOpenModal()}
+          onClick={() => openCreateModal()}
           className="px-4 py-2 rounded-lg bg-primary-500 text-white hover:bg-primary-600 transition"
         >
           Add Event
@@ -72,7 +82,8 @@ export const CalendarView = () => {
             key={index}
             date={dayObj.date}
             currentMonth={currentDate}
-            onClick={() => handleOpenModal(dayObj.date)} // ✅ Correct date
+            onClick={() => openCreateModal(dayObj.date)} // ✅ Correct date
+            onEventClick={(evt) => openEditModal(evt)}
           />
         ))}
       </div>
@@ -80,8 +91,13 @@ export const CalendarView = () => {
       {/* Event Modal */}
       <EventModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEventToEdit(null);
+          setSelectedDate(null);
+        }}
         defaultDate={selectedDate}
+        eventToEdit={eventToEdit}
       />
     </div>
   );
