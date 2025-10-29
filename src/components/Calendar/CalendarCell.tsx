@@ -57,4 +57,5 @@ const CalendarCell: React.FC<CalendarCellProps> = ({ date, currentMonth, onClick
   );
 };
 
-export default CalendarCell;
+export default React.memo(CalendarCell);
+
